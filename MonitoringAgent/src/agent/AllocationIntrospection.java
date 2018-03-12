@@ -15,6 +15,7 @@ public class AllocationIntrospection {
 
     private AllocationIntrospection() {
         sites = new HashMap<>();
+        sites.put(1, new AllocationSite("m", "c", 1, 10));
     }
 
     public static AllocationIntrospection getInstance() {

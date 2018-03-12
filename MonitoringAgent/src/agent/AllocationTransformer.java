@@ -2,7 +2,7 @@ package agent;
 
 import agent.utils.MethodUtils;
 import javassist.*;
-import javassist.bytecode.MethodInfo;
+import javassist.bytecode.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -10,13 +10,6 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
-/**
- * Tracking bytecodes:
- * anewarray
- * multianewarray
- * new
- * newarray
- */
 public class AllocationTransformer implements ClassFileTransformer {
     public static final int LIMIT = 10;
 
@@ -35,30 +28,62 @@ public class AllocationTransformer implements ClassFileTransformer {
             visitMethods(clazz);
 
             return clazz.toBytecode();
-        } catch (IOException | CannotCompileException | NotFoundException e) {
+        } catch (IOException | CannotCompileException | NotFoundException | BadBytecode e) {
             e.printStackTrace();
         }
 
         return classfileBuffer;
     }
 
-    private void visitMethods(CtClass clazz) throws CannotCompileException, NotFoundException {
+    private void visitMethods(CtClass clazz) throws CannotCompileException, NotFoundException, BadBytecode {
         for (CtMethod m : clazz.getDeclaredMethods())
             transform(clazz, m);
     }
 
     private void transform(CtClass clazz, CtMethod method)
-            throws CannotCompileException, NotFoundException {
+            throws CannotCompileException, NotFoundException, BadBytecode {
 
         if (MethodUtils.isMain(method))
-            method.insertAfter(AllocationIntrospection.class.getName() + ".printLog(" + LIMIT + ");", true);
+            method.insertAfter(AllocationIntrospection.class.getName() + ".getInstance().printLog(" + LIMIT + ");", true);
 
-        MethodInfo info = method.getMethodInfo();
-
-        visitMethodBody(clazz, info);
+        visitMethodBody(clazz, method);
     }
 
-    private void visitMethodBody(CtClass clazz, MethodInfo info) {
-        // TODO
+    private void visitMethodBody(CtClass clazz, CtMethod method) throws BadBytecode {
+
+        MethodInfo    info = method.getMethodInfo();
+        CodeAttribute code = info.getCodeAttribute();
+        CodeIterator  it   = code.iterator();
+
+        while (it.hasNext()) {
+            int bci    = it.next();
+            int opcode = it.byteAt(bci);
+
+            switch (opcode) {
+                case Opcode.ANEWARRAY:
+                    handleANewArray(clazz, info, it, bci);
+                    break;
+                case Opcode.MULTIANEWARRAY:
+
+                    break;
+                case Opcode.NEW:
+
+                    break;
+                case Opcode.NEWARRAY:
+
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private void handleANewArray(CtClass clazz, MethodInfo method, CodeIterator it, int bci) {
+        System.out.println("METHOD: " + method.getName());
+        ConstPool cp   = method.getConstPool();
+        String    info = cp.getClassInfo(bci);
+        System.out.println("info: " + info);
+
+
     }
 }
