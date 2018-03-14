@@ -2,8 +2,6 @@ package agent;
 
 import agent.utils.AllocationSite;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,9 +23,12 @@ public class AllocationIntrospection {
         return instance;
     }
 
-    public void log(Class<?> clazz, Method method, String[] args, String alloc, long bci, long line) {
+    public void log(String clazz, String method, String params, String alloc, long bci, long line) {
+
+        System.err.println("YYYYYYYEEEEEEEEEEEEEEEEEEEEEEEEEEEEIIIIIIIIII");
+
         AllocationSite site = new AllocationSite(
-                clazz.getSimpleName() + "::" + method.getName() + "(" + Arrays.toString(method.getParameterTypes()) + ")",
+                clazz + "::" + method + "(" + params + ")",
                 alloc,
                 line,
                 bci);
@@ -36,6 +37,7 @@ public class AllocationIntrospection {
     }
 
     public void printLog(int limit) {
+        System.out.println("Printing log ");
         sites.values().stream()
                 .sorted(Comparator.comparingLong(AllocationSite::getCount))
                 .limit(limit)
