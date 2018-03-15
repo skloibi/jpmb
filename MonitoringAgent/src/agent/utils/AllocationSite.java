@@ -5,11 +5,11 @@ import java.util.Objects;
 public class AllocationSite {
     public final String method;
     public final String className;
-    public final long   line;
-    public final long   bci;
-    private      long   count;
+    public final int   line;
+    public final int   bci;
+    private      int   count;
 
-    public AllocationSite(String method, String className, long line, long bci) {
+    public AllocationSite(String method, String className, int line, int bci) {
         this.method = method;
         this.className = className;
         this.line = line;
@@ -36,7 +36,7 @@ public class AllocationSite {
         return this;
     }
 
-    public long getCount() {
+    public int getCount() {
         return count;
     }
 }

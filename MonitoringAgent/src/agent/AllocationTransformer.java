@@ -1,13 +1,13 @@
 package agent;
 
-import agent.utils.MethodUtils;
+import agent.utils.AllocExprEditor;
 import javassist.*;
 import javassist.bytecode.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 public class AllocationTransformer implements ClassFileTransformer {
@@ -18,8 +18,7 @@ public class AllocationTransformer implements ClassFileTransformer {
                             String className,
                             Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain,
-                            byte[] classfileBuffer)
-            throws IllegalClassFormatException {
+                            byte[] classfileBuffer) {
 
         try {
             ClassPool pool  = ClassPool.getDefault();
@@ -27,28 +26,61 @@ public class AllocationTransformer implements ClassFileTransformer {
 
             visitMethods(clazz);
 
-            return clazz.toBytecode();
-        } catch (IOException | CannotCompileException | NotFoundException | BadBytecode e) {
-            System.err.println("FAIL");
+            byte[] data = clazz.toBytecode();
+            if (className.endsWith("Main")) {
+                String file = className.replace('/', '.') + ".class";
+                System.err.println("WRITING : " + file);
+                try (FileOutputStream out = new FileOutputStream(file)) {
+                    out.write(data);
+                }
+            }
+
+            return data;
+        } catch (IOException | RuntimeException | CannotCompileException | NotFoundException e) {
+            System.err.println("ERROR: " + e.getMessage());
             e.printStackTrace();
         }
 
         return classfileBuffer;
     }
 
-    private void visitMethods(CtClass clazz) throws CannotCompileException, NotFoundException, BadBytecode {
+    private void visitMethods(CtClass clazz) throws CannotCompileException, NotFoundException {
         for (CtMethod m : clazz.getDeclaredMethods())
-            transform(clazz, m);
+            transform(m);
     }
 
-    private void transform(CtClass clazz, CtMethod method)
-            throws CannotCompileException, NotFoundException, BadBytecode {
+    private void transform(CtMethod method)
+            throws CannotCompileException, NotFoundException {
 
-        if (MethodUtils.isMain(method))
-            method.insertAfter(AllocationIntrospection.class.getName() + ".getInstance().printLog(" + LIMIT + ");", true);
+        System.out.println("checking method: " + method.getDeclaringClass().getSimpleName() + "::" + method.getName());
+//        if (MethodUtils.isMain(method)) {
+//            System.err.println("MAIN FOUND: " + method.getDeclaringClass().getSimpleName() + "::" + method.getName());
+//            try {
+//                instrumentMain(method);
+//            } catch (RuntimeException e) {
+//                System.err.println("FAIL: " + e.getMessage());
+//            }
+//            System.err.println("AFTER MAIN: " + method.getDeclaringClass().getSimpleName() + "::" + method.getName());
+//            System.err.println("MAIN INSTRUMENTED");
+//        } else {
 
-        visitMethodBody(clazz, method);
+//        visitMethodBody(clazz, method);
+            method.instrument(new AllocExprEditor());
+//        }
+        System.err.println("METHOD INSTRUMENTED: " + method.getDeclaringClass().getSimpleName() + "::" + method.getName());
     }
+
+//    private void instrumentMain(CtMethod main) throws CannotCompileException {
+//        main.insertBefore(
+//                "{" +
+//                    "Runtime.getRuntime().addShutdownHook(new Thread() {" +
+//                        "public void run() {" +
+////                            AllocationIntrospection.class.getName() + ".getInstance().printLog(" + LIMIT + ");" +
+//                        "}" +
+//                    "});" +
+//                "}"
+//        );
+//    }
 
     private void visitMethodBody(CtClass clazz, CtMethod method) throws BadBytecode {
 
@@ -80,39 +112,54 @@ public class AllocationTransformer implements ClassFileTransformer {
     }
 
     private void handleNew(CtClass clazz, MethodInfo method, CodeIterator it, int bci) throws BadBytecode {
-        System.out.println("NEW");
-        System.out.println("METHOD: " + method.getName());
-        System.err.println("1");
-        ConstPool cp   = method.getConstPool();
-        String    info = cp.getClassInfo(bci);
-        System.err.println("2");
-        System.out.println("info: " + info);
-        System.err.println("3");
-        count(clazz, method, info, it, bci);
-        System.err.println("4");
+        try {
+            System.out.println("NEW");
+            System.out.println("METHOD: " + method.getName());
+            ConstPool cp   = method.getConstPool();
+            String    info = cp.getClassInfo(bci);
+            System.out.println("info: " + info);
+            count(clazz, method, info, it, bci);
+            System.err.println("4 NEW");
+        } catch (RuntimeException e) {
+            System.err.println("RTE!!!! " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("E!!!! " + e.getMessage());
+        }
     }
 
     private void handleArray(CtClass clazz, MethodInfo method, CodeIterator it, int bci) throws BadBytecode {
-        System.out.println("ARRAY");
-        System.out.println("METHOD: " + method.getName());
-        ConstPool cp   = method.getConstPool();
-        String    info = cp.getClassInfo(bci);
-        System.out.println("info: " + info);
+        try {
+            System.out.println("ARRAY");
+            System.out.println("METHOD: " + method.getName());
+            ConstPool cp   = method.getConstPool();
+            String    info = cp.getClassInfo(bci);
+            System.out.println("info: " + info);
 
-        count(clazz, method, info, it, bci);
+            count(clazz, method, info, it, bci);
 //        int a = cp.getIntegerInfo(bci);
 //        System.out.println("dims: " + a);
+        } catch (RuntimeException e) {
+            System.err.println("RTE!!!! " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("E!!!! " + e.getMessage());
+        }
     }
 
     private void handleANewArray(CtClass clazz, MethodInfo method, CodeIterator it, int bci) throws BadBytecode {
-        System.out.println("NEW ARRAY");
-        System.out.println("METHOD: " + method.getName());
-        ConstPool cp   = method.getConstPool();
-        String    info = cp.getClassInfo(bci);
-        System.out.println("info: " + info);
-        count(clazz, method, info, it, bci);
-        // TODO
+        try {
+            System.out.println("NEW ARRAY");
+            System.out.println("METHOD: " + method.getName());
+            ConstPool cp   = method.getConstPool();
+            String    info = cp.getClassInfo(bci);
+            System.out.println("info: " + info);
+            count(clazz, method, info, it, bci);
+            // TODO
 //        System.out.println("dims: " + it.);
+        } catch (RuntimeException e) {
+            System.err.println("RTE!!!! " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("E!!!! " + e.getMessage());
+        }
     }
 
     private void count(CtClass clazz, MethodInfo method, String instance, CodeIterator it, int bci) throws BadBytecode {
