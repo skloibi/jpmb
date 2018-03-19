@@ -17,7 +17,7 @@ public class Agent {
         Class<?>[] classes = instrumentation.getAllLoadedClasses();
 
         for (Class<?> clazz : classes) {
-            if (!instrumentation.isModifiableClass(clazz))
+            if (clazz.getPackageName().equals("agent") || clazz.getPackageName().equals("agent.utils") || !instrumentation.isModifiableClass(clazz))
                 continue;
 
             instrumentation.retransformClasses(clazz);

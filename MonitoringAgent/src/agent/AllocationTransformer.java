@@ -20,6 +20,8 @@ public class AllocationTransformer implements ClassFileTransformer {
                             ProtectionDomain protectionDomain,
                             byte[] classfileBuffer) {
 
+        System.err.println("TRANSFORMING: " + className + " " + (classBeingRedefined != null ? classBeingRedefined.getSimpleName() : ""));
+
         try {
             ClassPool pool  = ClassPool.getDefault();
             CtClass   clazz = pool.makeClass(new ByteArrayInputStream(classfileBuffer));
@@ -65,7 +67,9 @@ public class AllocationTransformer implements ClassFileTransformer {
 //        } else {
 
 //        visitMethodBody(clazz, method);
-            method.instrument(new AllocExprEditor());
+
+        CodeConverter conv = new CodeConverter();
+        method.instrument(new AllocExprEditor());
 //        }
         System.err.println("METHOD INSTRUMENTED: " + method.getDeclaringClass().getSimpleName() + "::" + method.getName());
     }
