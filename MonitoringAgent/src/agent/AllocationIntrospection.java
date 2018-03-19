@@ -2,8 +2,8 @@ package agent;
 
 import agent.utils.AllocationSite;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AllocationIntrospection {
     private static AllocationIntrospection instance;
@@ -11,7 +11,7 @@ public class AllocationIntrospection {
     private Map<Integer, AllocationSite> sites;
 
     private AllocationIntrospection() {
-        sites = new HashMap<>();
+        sites = new ConcurrentHashMap<>();
         sites.put(1, new AllocationSite("m", "c", 1, 10));
     }
 
@@ -22,9 +22,9 @@ public class AllocationIntrospection {
         return instance;
     }
 
-    public void log(String clazz, String method, String params, String alloc, int bci, int line) {
+    public void log(String identifier, String alloc, int bci, int line) {
         AllocationSite site = new AllocationSite(
-                clazz + "::" + method + "(" + params + ")",
+                identifier,
                 alloc,
                 line,
                 bci);

@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Premain-Class: agent.Agent
-Can-Redefine-Classes: true
+Can-Redefine-Classes: false
 Can-Retransform-Classes: true
 Class-Path: javassist.jar
-Can-Set-Native-Method-Prefix: true
-Boot-Class-Path: javassist.jar
+Can-Set-Native-Method-Prefix: false
+Boot-Class-Path: javassist.jar agent.jar
 
