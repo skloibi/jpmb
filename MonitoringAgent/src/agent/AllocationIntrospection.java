@@ -2,6 +2,9 @@ package agent;
 
 import agent.utils.AllocationSite;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -12,7 +15,6 @@ public class AllocationIntrospection {
 
     private AllocationIntrospection() {
         sites = new ConcurrentHashMap<>();
-        sites.put(1, new AllocationSite("m", "c", 1, 10));
     }
 
     public static AllocationIntrospection getInstance() {
@@ -22,6 +24,7 @@ public class AllocationIntrospection {
         return instance;
     }
 
+    @SuppressWarnings("unused")
     public void log(String identifier, String alloc, int bci, int line) {
         AllocationSite site = new AllocationSite(
                 identifier,
@@ -29,18 +32,27 @@ public class AllocationIntrospection {
                 line,
                 bci);
 
-        sites.compute(site.hashCode(), (k, v) -> v == null ? site : v.increase());
+        AllocationSite old = sites.get(site.hashCode());
+
+        if (old == null)
+            sites.put(site.hashCode(), site);
+        else
+            sites.put(old.hashCode(), old.increase());
     }
 
     public void printLog(int limit) {
-        System.err.println("Printing log ");
-        sites.values().stream()
-                .sorted((s1, s2) -> Integer.compare(s2.getCount(), s1.getCount()))
-                .limit(limit)
-                .forEach(a -> System.err.println(
-                        String.format("%d %s @ %s (Line %d)",
-                                a.getCount(), a.className, a.method, a.line)
-                        // TODO check if line exists
-                ));
+        List<AllocationSite> sites = new ArrayList<>(this.sites.values());
+
+        sites.sort(new Comparator<>() {
+            @Override
+            public int compare(AllocationSite o1, AllocationSite o2) {
+                return Integer.compare(o2.count, o1.count);
+            }
+        });
+
+        for (int i = 0; i < sites.size() && i < limit; i++) {
+            AllocationSite site = sites.get(i);
+            System.err.println((i + 1) + ":\t" + site.count + "\t" + site.className + " @\t" + site.method + " " + site.getLineDescriptor());
+        }
     }
 }

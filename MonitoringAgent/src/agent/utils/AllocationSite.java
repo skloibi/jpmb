@@ -3,18 +3,26 @@ package agent.utils;
 import java.util.Objects;
 
 public class AllocationSite {
-    public final String method;
-    public final String className;
-    public final int   line;
-    public final int   bci;
-    private      int   count;
+    public final  String method;
+    public final  String className;
+    private final int    line;
+    private final int    bci;
+    public final  int    count;
 
-    public AllocationSite(String method, String className, int line, int bci) {
+    private AllocationSite(String method, String className, int line, int bci, int count) {
         this.method = method;
         this.className = className;
         this.line = line;
         this.bci = bci;
-        this.count = 1;
+        this.count = count;
+    }
+
+    public AllocationSite(String method, String className, int line, int bci) {
+        this(method, className, line, bci, 1);
+    }
+
+    public AllocationSite(AllocationSite site, int count) {
+        this(site.method, site.className, site.line, site.bci, count);
     }
 
     @Override
@@ -31,12 +39,25 @@ public class AllocationSite {
         return Objects.hash(method, bci);
     }
 
-    public AllocationSite increase() {
-        count++;
-        return this;
+    @Override
+    public String toString() {
+        return "AllocationSite{" +
+                "method='" + method + '\'' +
+                ", className='" + className + '\'' +
+                ", line=" + line +
+                ", bci=" + bci +
+                ", count=" + count +
+                '}';
     }
 
-    public int getCount() {
-        return count;
+    public AllocationSite increase() {
+        return new AllocationSite(this, count + 1);
+    }
+
+    public String getLineDescriptor() {
+        if (line != -1)
+            return "(Line " + line + ")";
+
+        return "(BCI " + bci + ")";
     }
 }
