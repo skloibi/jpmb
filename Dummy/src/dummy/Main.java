@@ -4,12 +4,8 @@ import java.util.stream.IntStream;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("START OF MAIN");
-
         Main m = new Main();
-
         IntStream.range(0, 100).forEach(i -> m.test());
-        System.out.println("END OF MAIN");
     }
 
     void test() {
