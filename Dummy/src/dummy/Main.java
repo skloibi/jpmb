@@ -9,7 +9,7 @@ public class Main {
     }
 
     void test() {
-        String a = "test";
+        String a = new String("test");
         Object o = new Object();
 
         Object[] arr  = new Object[10];
