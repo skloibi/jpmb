@@ -1,11 +1,13 @@
 package dummy;
 
-import java.util.stream.IntStream;
-
 public class Main {
     public static void main(String[] args) {
+        System.out.println("START MAIN");
         Main m = new Main();
-        IntStream.range(0, 100).forEach(i -> m.test());
+        for (int i = 0; i < 2000; i++) {
+            m.test();
+        }
+        System.out.println("END MAIN");
     }
 
     void test() {
