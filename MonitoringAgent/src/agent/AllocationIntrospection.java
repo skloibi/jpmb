@@ -26,11 +26,7 @@ public class AllocationIntrospection {
 
     @SuppressWarnings("unused")
     public void log(String identifier, String alloc, int bci, int line) {
-        AllocationSite site = new AllocationSite(
-                identifier,
-                alloc,
-                line,
-                bci);
+        AllocationSite site = new AllocationSite(identifier, alloc, line, bci);
 
         AllocationSite old = sites.get(site.hashCode());
 
@@ -43,7 +39,7 @@ public class AllocationIntrospection {
     public void printLog(int limit) {
         List<AllocationSite> sites = new ArrayList<>(this.sites.values());
 
-        sites.sort(new Comparator<>() {
+        sites.sort(new Comparator<AllocationSite>() {
             @Override
             public int compare(AllocationSite o1, AllocationSite o2) {
                 return Integer.compare(o2.count, o1.count);

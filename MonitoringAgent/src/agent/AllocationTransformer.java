@@ -1,10 +1,7 @@
 package agent;
 
 import agent.utils.AllocExprEditor;
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
+import javassist.*;
 import javassist.expr.ExprEditor;
 
 import java.io.ByteArrayInputStream;
@@ -18,12 +15,14 @@ import java.util.List;
 public class AllocationTransformer implements ClassFileTransformer {
 
     public static final String[] DEFAULT_PACKAGES = {
-            AllocationTransformer.class.getPackageName(),
-            "java/util",
-            "java.util",
-            "jdk",
+            AllocationTransformer.class.getPackage().getName(),
+//            "java/util",
+//            "java.util",
+            "jdk"
+//            "java/lang/Integer"
 //            "java/lang",
-//            "java.lang"
+//            "java.lang",
+//            "java"
             // TODO add more / remove java.util?
     };
 

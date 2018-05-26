@@ -1,7 +1,5 @@
 package agent.utils;
 
-import java.util.Objects;
-
 public class AllocationSite {
     public final  String method;
     public final  String className;
@@ -29,14 +27,20 @@ public class AllocationSite {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         AllocationSite that = (AllocationSite) o;
-        return bci == that.bci &&
-                Objects.equals(method, that.method);
+
+        if (bci != that.bci) return false;
+        if (!method.equals(that.method)) return false;
+        return className.equals(that.className);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(method, bci);
+        int result = method.hashCode();
+        result = 31 * result + className.hashCode();
+        result = 31 * result + bci;
+        return result;
     }
 
     @Override

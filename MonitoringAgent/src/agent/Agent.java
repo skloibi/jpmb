@@ -5,7 +5,6 @@ import java.lang.instrument.UnmodifiableClassException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Agent {
 
@@ -14,16 +13,14 @@ public class Agent {
     public static final String LIMIT_PREFIX  = "-l";
     public static final String ARG_SPLIT     = ";";
 
-    public static void premain(String args, Instrumentation instrumentation) {
+    public static void premain(String args, Instrumentation instrumentation) throws UnmodifiableClassException {
 
-        int          l;
-        boolean      debug = false;
-        List<String> argList;
-
-        if (args == null)
-            argList = new ArrayList<>();
-        else
-            argList = Arrays.asList(args.split(ARG_SPLIT));
+        int     l;
+        boolean debug = false;
+        List<String> argList =
+                args == null ?
+                        new ArrayList<>() :
+                        Arrays.asList(args.split(ARG_SPLIT));
 
         // check if debug mode
         if (argList.contains(DEBUG_PREFIX))
@@ -31,10 +28,16 @@ public class Agent {
 
         // get limit
         try {
-            String limitStr = argList.stream().filter(a -> a.startsWith(LIMIT_PREFIX))
-                    .findFirst()
-                    .map(a -> a.substring(LIMIT_PREFIX.length()))
-                    .orElse("");
+            String limitStr = "";
+            for (String a : argList) {
+                if (a.startsWith(LIMIT_PREFIX)) {
+                    limitStr = a;
+                    break;
+                }
+            }
+
+            if (limitStr.length() >= LIMIT_PREFIX.length())
+                limitStr = limitStr.substring(LIMIT_PREFIX.length());
 
             l = Integer.parseInt(limitStr);
         } catch (NumberFormatException e) {
@@ -42,10 +45,11 @@ public class Agent {
             l = DEFAULT_LIMIT;
         }
 
-        List<String> exclusions = argList.stream()
-                .filter(a -> !a.startsWith(LIMIT_PREFIX))
-                .filter(a -> !a.startsWith(DEBUG_PREFIX))
-                .collect(Collectors.toList());
+        List<String> exclusions = new ArrayList<>();
+        for (String a : argList) {
+            if (!a.startsWith(LIMIT_PREFIX) && !a.startsWith(DEBUG_PREFIX))
+                exclusions.add(a);
+        }
 
         final int limit = l > 0 ? l : DEFAULT_LIMIT;
 
@@ -59,16 +63,18 @@ public class Agent {
         instrumentation.addTransformer(new AllocationTransformer(debug, exclusions), true);
         Class<?>[] classes = instrumentation.getAllLoadedClasses();
 
-        Arrays.stream(classes)
-                .filter(instrumentation::isModifiableClass)
-                .filter(c -> exclusions.stream()
-                        .noneMatch(e -> c.getName().startsWith(e)))
-                .forEach(c -> {
-                    try {
-                        instrumentation.retransformClasses(c);
-                    } catch (UnmodifiableClassException e) {
-                        e.printStackTrace();
-                    }
-                });
+        for (Class<?> clazz : classes) {
+            boolean fail = false;
+
+            for (String prefix : exclusions) {
+                if (clazz.getName().startsWith(prefix))
+                    fail = true;
+            }
+
+            if (fail || !instrumentation.isModifiableClass(clazz) || clazz.getName().startsWith("java.lang.invoke.LambdaForm"))
+                continue;
+
+            instrumentation.retransformClasses(clazz);
+        }
     }
 }

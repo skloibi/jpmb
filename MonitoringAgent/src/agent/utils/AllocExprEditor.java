@@ -10,14 +10,11 @@ import javassist.expr.ExprEditor;
 import javassist.expr.NewArray;
 import javassist.expr.NewExpr;
 
-import java.util.Arrays;
-
 public class AllocExprEditor extends ExprEditor {
 
     @Override
     public void edit(NewExpr e) throws CannotCompileException {
         try {
-
             insertBefore(e, getStatement(e));
         } catch (RuntimeException | NotFoundException ex) {
             System.err.println(ex.getMessage());
@@ -28,7 +25,6 @@ public class AllocExprEditor extends ExprEditor {
     @Override
     public void edit(NewArray a) throws CannotCompileException {
         try {
-
             insertBefore(a, getStatement(a));
         } catch (RuntimeException | NotFoundException ex) {
             System.err.println("Received exception: " + ex.getMessage());
@@ -54,10 +50,18 @@ public class AllocExprEditor extends ExprEditor {
         CtBehavior behav  = e.where();
         String     clazz  = behav.getDeclaringClass().getName(); // Foo
         String     method = behav.getName(); // bar
-        String args = Arrays.stream(behav.getParameterTypes())
-                .map(CtClass::getSimpleName)
-                .reduce((a, b) -> String.join(", ", a, b))
-                .orElse("");
+
+        StringBuilder args  = new StringBuilder();
+        boolean       first = true;
+
+        for (CtClass type : behav.getParameterTypes()) {
+            args.append(type.getSimpleName());
+
+            if (!first)
+                args.append(", ");
+            else
+                first = false;
+        }
 
         StringBuilder bracks = new StringBuilder();
         for (int i = 0; i < dims; i++) bracks.append("[]");
