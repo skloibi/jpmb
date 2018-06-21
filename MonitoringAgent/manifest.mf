@@ -2,7 +2,5 @@ Manifest-Version: 1.0
 Premain-Class: agent.Agent
 Can-Redefine-Classes: false
 Can-Retransform-Classes: true
-Class-Path: javassist.jar
 Can-Set-Native-Method-Prefix: false
-Boot-Class-Path: javassist.jar agent.jar scratch/jar/batik-all.jar scratch/jar/crimson-1.1.3.jar scratch/jar/xalan-2.6.0.jar scratch/jar/xerces_2_5_0.jar scratch/jar/xml-apis.jar scratch/jar/xml-apis-ext.jar dacapo
-
+Boot-Class-Path: javassist.jar agent.jar
