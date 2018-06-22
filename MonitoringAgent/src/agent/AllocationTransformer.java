@@ -18,11 +18,11 @@ public class AllocationTransformer implements ClassFileTransformer {
             AllocationTransformer.class.getPackage().getName(),
 //            "java/util",
 //            "java.util",
-            "jdk"
-//            "java/lang/Integer"
+            "jdk",
+//            "java/lang/Integer",
 //            "java/lang",
 //            "java.lang",
-//            "java"
+            "java"
             // TODO add more / remove java.util?
     };
 
