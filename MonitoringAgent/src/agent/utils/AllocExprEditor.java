@@ -55,12 +55,12 @@ public class AllocExprEditor extends ExprEditor {
         boolean       first = true;
 
         for (CtClass type : behav.getParameterTypes()) {
-            args.append(type.getSimpleName());
-
             if (!first)
                 args.append(", ");
             else
                 first = false;
+
+            args.append(type.getSimpleName());
         }
 
         StringBuilder bracks = new StringBuilder();

@@ -48,7 +48,13 @@ public class AllocationIntrospection {
 
         for (int i = 0; i < sites.size() && i < limit; i++) {
             AllocationSite site = sites.get(i);
-            System.err.println((i + 1) + ":\t" + site.count + "\t" + site.className + " @\t" + site.method + " " + site.getLineDescriptor());
+            System.err.printf(
+                    "%3d: %15d %-30s @ %-40s %s\n",
+                    (i + 1),
+                    site.count,
+                    site.className,
+                    site.method,
+                    site.getLineDescriptor());
         }
     }
 }
