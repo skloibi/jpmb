@@ -15,15 +15,16 @@ import java.util.List;
 public class AllocationTransformer implements ClassFileTransformer {
 
     public static final String[] DEFAULT_PACKAGES = {
-            AllocationTransformer.class.getPackage().getName(),
-//            "java/util",
-//            "java.util",
-            "jdk",
-//            "java/lang/Integer",
-//            "java/lang",
-//            "java.lang",
-            "java"
-            // TODO add more / remove java.util?
+            AllocationTransformer.class.getPackage().getName().replace('.', '/'),
+              "java/util",
+//              "jdk",
+//              "sun",
+              "java/lang/Integer",
+//              "java/security",
+//              "java/lang/reflect",
+//              "java/lang/StringBuilder",
+//              "java/lang/String",
+//              "java/lang/CharSequence"
     };
 
     private final boolean      debug;
@@ -48,6 +49,8 @@ public class AllocationTransformer implements ClassFileTransformer {
         // skip excluded classes
         if (excludedPackages.stream().anyMatch(className::startsWith))
             return classfileBuffer;
+
+//        System.out.println("Instrumenting " + className);
 
         try {
             ClassPool pool  = ClassPool.getDefault();
