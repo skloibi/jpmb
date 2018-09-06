@@ -42,12 +42,6 @@ final class GCHelper {
         return gcTime();
     }
 
-    private static long currentlyUsedMemorySnapshot() {
-        forceGC();
-        return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() +
-                ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed();
-    }
-
     static long totalMemory() throws InterruptedException {
         long m;
         long m2 = totalMemorySnapshot();
@@ -59,7 +53,13 @@ final class GCHelper {
         return m;
     }
 
-    static long totalMemorySnapshot() {
+    private static long currentlyUsedMemorySnapshot() {
+        forceGC();
+        return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() +
+                ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed();
+    }
+
+    private static long totalMemorySnapshot() {
         return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getCommitted() +
                 ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getCommitted();
     }
